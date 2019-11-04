@@ -73,11 +73,12 @@ void printHex(unsigned char line, unsigned long val) {
 	buf[4] = ':';
 	buf[9] = 0;
 
-	LCD_ShowString(24, (line << 4), (u8 *)(buf), YELLOW);
+	LCD_ShowString8(0, (line << 3), (u8 *)(buf), YELLOW);
 }
 
 unsigned long g_count = 0; // Displays starting at 2 - why?
 
+// asm volatile("csrr %0, 0xb00 : =r(__tmp));
 #define read_csr(csr_reg) ({ \
 	unsigned long __tmp; \
 	asm volatile ("csrr %0, " #csr_reg : "=r"(__tmp)); \
@@ -130,6 +131,10 @@ int main(void)
 		printHex(2, g_count);
 		printHex(3, *(unsigned short *)(0x40000024));
 		printHex(4, fmc_pid);
+
+		LCD_ShowString8(0, (5 << 3), (u8 *)"abcdevwxyzABCDEVWXYZ", YELLOW);
+		LCD_ShowString8(0, (6 << 3), (u8 *)"0123456789 !\"$%^&*()", YELLOW);
+		LCD_ShowString8(0, (7 << 3), (u8 *)"#{}[]-+_~\\:;@<=>,./'", YELLOW);
 
 		if(++rom_ptr == (unsigned long *)0x1fffb800)
 			rom_ptr = (unsigned long *)0x1fffb000;
