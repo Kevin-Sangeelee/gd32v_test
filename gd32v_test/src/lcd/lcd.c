@@ -1,5 +1,6 @@
 #include "lcd/lcd.h"
 #include "lcd/oledfont.h"
+#include "lcd/speccyfont.h"
 #include "lcd/bmp.h"
 u16 BACK_COLOR;   //背景色
 
@@ -567,6 +568,51 @@ void LCD_ShowChar(u16 x,u16 y,u8 num,u8 mode,u16 color)
 	}   	   	 	  
 }
 
+/******************************************************************************
+Function description: display characters
+Entry data: x, y starting point coordinates
+            Num characters to display
+Return value: None      
+******************************************************************************/
+void LCD_ShowChar8(u16 x, u16 y, u8 ch, u16 color)
+{
+	u8 ch_byte;
+	u8 pos, t;
+	u16 x0=x;
+
+	// If position is outside screen, or char is non-printable
+	// then do nothing, just return.
+	if(x > LCD_W-8 || y > LCD_H-8 || ch & 0x80 || ch < 0x20)
+		return;
+
+	ch = ch - ' '; // character array starts at ' ', offset 0
+
+	// Define the bounding rectangle for draw-data.
+	LCD_Address_Set(x, y, x+7, y+7);
+
+	// Calculate the offset into the byte array of the characters.
+	u16 ch_idx = (u16)ch * 8;
+
+	for(pos=0; pos < 8; pos++)
+	{ 
+		// fetch the next character row-byte
+		ch_byte = char_rom[ ch_idx + pos ];
+
+		// Shift the bits and write 
+		for(t=0; t < 8; t++)
+		{                 
+			if(ch_byte & 0x80)
+				LCD_WR_DATA(color);
+			else
+				LCD_WR_DATA(BACK_COLOR);
+			ch_byte <<= 1;
+			x++;
+		}
+		x=x0;
+		y++;
+	}	
+}
+
 
 /******************************************************************************
       函数说明：显示字符串
@@ -582,6 +628,31 @@ void LCD_ShowString(u16 x,u16 y,const u8 *p,u16 color)
         if(y>LCD_H-16){y=x=0;LCD_Clear(RED);}
         LCD_ShowChar(x,y,*p,0,color);
         x+=8;
+        p++;
+    }  
+}
+
+/**
+ * Renders the string 'p' at the given coordinates using 8-bit characters.
+ *
+ * x, y  - the coordinates of the top left pixel.
+ * p     - a pointer to the string.
+ * color - the RGB 5-6-5 colour of the text.
+ */
+void LCD_ShowString8(u16 x, u16 y, const u8 *p, u16 color)
+{         
+    while(*p!='\0')
+    {       
+        if(x > LCD_W-8) {
+		x = 0;
+		y += 8;
+	}
+        if(y > LCD_H-8) {
+		y = x = 0;
+		LCD_Clear(RED);
+	}
+        LCD_ShowChar8(x, y, *p, color);
+        x += 8;
         p++;
     }  
 }
