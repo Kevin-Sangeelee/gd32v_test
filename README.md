@@ -1,6 +1,6 @@
 This was modified from Sipeed's LCD example at
 
- - https://github.com/sipeed/Longan\_GD32VF\_examples.git
+ - https://github.com/sipeed/Longan_GD32VF_examples.git
 
 and the GigaDevice GD32V Firmware examples, along with snippets of code found
 elsewhere.
