@@ -67,8 +67,8 @@ void printHex(unsigned char line, unsigned long val) {
 	char buf[10];
 
 	for(int i=0; i < 4; i++) {
-		buf[i]   = hexval((val >> (12 - (i << 2))) & 0xf);
-		buf[i+5] = hexval((val >> (28 - (i << 2))) & 0xf);
+		buf[i]   = hexval((val >> (28 - (i << 2))) & 0xf);
+		buf[i+5] = hexval((val >> (12 - (i << 2))) & 0xf);
 	}
 	buf[4] = ':';
 	buf[9] = 0;
@@ -117,8 +117,21 @@ int main(void)
 
 	enable_mcycle_minstret();
 
+	uint32_t endian_test;
+	uint16_t porta;
+
+	((unsigned char *)(&endian_test))[3] = 0x76;
+	((unsigned char *)(&endian_test))[2] = 0x54;
+	((unsigned char *)(&endian_test))[1] = 0x32;
+	((unsigned char *)(&endian_test))[0] = 0x10;
+	//endian_test = 0x76543210;
+
 	while (1)
 	{
+		// BOOT0 button responds on PA8 - why??
+		//porta = gpio_input_bit_get(GPIOA, GPIO_PIN_8);
+		porta = gpio_input_port_get(GPIOA);
+
 		// mcycle (read only, User mode)
 		// mcyclel = read_csr(0x301);
 		unsigned long mcyclel = read_csr(0xC00);
@@ -135,6 +148,9 @@ int main(void)
 		LCD_ShowString8(0, (5 << 3), (u8 *)"abcdevwxyzABCDEVWXYZ", YELLOW);
 		LCD_ShowString8(0, (6 << 3), (u8 *)"0123456789 !\"$%^&*()", YELLOW);
 		LCD_ShowString8(0, (7 << 3), (u8 *)"#{}[]-+_~\\:;@<=>,./'", YELLOW);
+
+		printHex(8, porta);
+		printHex(9, endian_test);
 
 		if(++rom_ptr == (unsigned long *)0x1fffb800)
 			rom_ptr = (unsigned long *)0x1fffb000;
