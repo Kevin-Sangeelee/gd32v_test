@@ -102,6 +102,7 @@ int main(void)
 	eclic_global_interrupt_enable();
 	eclic_set_nlbits(ECLIC_GROUP_LEVEL3_PRIO1);
 	eclic_irq_enable(TIMER1_IRQn,1,0);
+	//eclic_irq_enable(EXTI0_IRQn,1,0);
 
 	Lcd_Init();			// init OLED
 	BACK_COLOR=BLUE;
@@ -118,7 +119,7 @@ int main(void)
 	enable_mcycle_minstret();
 
 	uint32_t endian_test;
-	uint16_t porta;
+	uint16_t porta, pa8;
 
 	((unsigned char *)(&endian_test))[3] = 0x76;
 	((unsigned char *)(&endian_test))[2] = 0x54;
@@ -129,8 +130,13 @@ int main(void)
 	while (1)
 	{
 		// BOOT0 button responds on PA8 - why??
-		//porta = gpio_input_bit_get(GPIOA, GPIO_PIN_8);
+		pa8 = gpio_input_bit_get(GPIOA, GPIO_PIN_8);
 		porta = gpio_input_port_get(GPIOA);
+		//if(pa8 == 1) {
+		//	asm("li a4,0x0;\njalr a4,0");
+		//}
+
+		BACK_COLOR = pa8 ? RED : BLUE;
 
 		// mcycle (read only, User mode)
 		// mcyclel = read_csr(0x301);
@@ -139,10 +145,19 @@ int main(void)
 		// Flash Memory Controller: Memory density register
 		unsigned long fmc_pid = *(unsigned long *)(0x1FFFF7E0);
 
-		printHex(0, mcyclel);
-		printHex(1, *rom_ptr);
-		printHex(2, g_count);
-		printHex(3, *(unsigned short *)(0x40000024));
+		//printHex(0, mcyclel);
+		//printHex(1, *rom_ptr);
+		//printHex(2, g_count);
+		//printHex(3, *(unsigned short *)(0x40000024));
+		LCD_ShowString8(90, (0 << 3), (u8 *)"mtvec", YELLOW);
+		printHex(0, read_csr(0x305));
+		LCD_ShowString8(90, (1 << 3), (u8 *)"mtvt", YELLOW);
+		printHex(1, read_csr(0x307));
+		LCD_ShowString8(90, (2 << 3), (u8 *)"mstatus", YELLOW);
+		printHex(2, read_csr(0x300));
+		LCD_ShowString8(90, (3 << 3), (u8 *)"cliccfg", YELLOW);
+		printHex(3, *((u8 *)ECLIC_ADDR_BASE));
+
 		printHex(4, fmc_pid);
 
 		LCD_ShowString8(0, (5 << 3), (u8 *)"abcdevwxyzABCDEVWXYZ", YELLOW);
