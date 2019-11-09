@@ -91,6 +91,7 @@ int main(void)
 	// Enable PORTA and PORTC peripherals.
 	rcu_periph_clock_enable(RCU_GPIOA);
 	rcu_periph_clock_enable(RCU_GPIOC);
+	rcu_periph_clock_enable(RCU_AF);
 
 	// Configure bits 1 & 2 of PORTA, and bit 13 in PORTC
 	// Note, the SDK defining GPIO 'PIN' is a misnomer.
@@ -102,7 +103,11 @@ int main(void)
 	eclic_global_interrupt_enable();
 	eclic_set_nlbits(ECLIC_GROUP_LEVEL3_PRIO1);
 	eclic_irq_enable(TIMER1_IRQn,1,0);
-	//eclic_irq_enable(EXTI0_IRQn,1,0);
+	eclic_irq_enable(EXTI5_9_IRQn,1,0);
+
+	gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOA, GPIO_PIN_SOURCE_8);
+	exti_init(EXTI_8, EXTI_INTERRUPT, EXTI_TRIG_FALLING);
+	exti_interrupt_flag_clear(EXTI_8);
 
 	Lcd_Init();			// init OLED
 	BACK_COLOR=BLUE;
@@ -147,7 +152,7 @@ int main(void)
 
 		//printHex(0, mcyclel);
 		//printHex(1, *rom_ptr);
-		//printHex(2, g_count);
+		printHex(5, g_count);
 		//printHex(3, *(unsigned short *)(0x40000024));
 		LCD_ShowString8(90, (0 << 3), (u8 *)"mtvec", YELLOW);
 		printHex(0, read_csr(0x305));
@@ -160,7 +165,7 @@ int main(void)
 
 		printHex(4, fmc_pid);
 
-		LCD_ShowString8(0, (5 << 3), (u8 *)"abcdevwxyzABCDEVWXYZ", YELLOW);
+		//LCD_ShowString8(0, (5 << 3), (u8 *)"abcdevwxyzABCDEVWXYZ", YELLOW);
 		LCD_ShowString8(0, (6 << 3), (u8 *)"0123456789 !\"$%^&*()", YELLOW);
 		LCD_ShowString8(0, (7 << 3), (u8 *)"#{}[]-+_~\\:;@<=>,./'", YELLOW);
 

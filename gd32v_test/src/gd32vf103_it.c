@@ -51,3 +51,13 @@ void TIMER1_IRQHandler(void)
  //       gd_eval_led_toggle(LED2);
     }
 }
+
+void EXTI5_9_IRQHandler(void)
+{
+	if (SET == exti_interrupt_flag_get(EXTI_8)){
+		exti_interrupt_flag_clear(EXTI_8);
+		g_count++;
+
+	}
+}
+
