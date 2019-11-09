@@ -97,6 +97,7 @@ int main(void)
 	// Note, the SDK defining GPIO 'PIN' is a misnomer.
 	gpio_init(GPIOC, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_13);
 	gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_1|GPIO_PIN_2);
+	gpio_init(GPIOA, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, GPIO_PIN_8);
 
 	timer_config();
 
@@ -130,29 +131,20 @@ int main(void)
 	((unsigned char *)(&endian_test))[2] = 0x54;
 	((unsigned char *)(&endian_test))[1] = 0x32;
 	((unsigned char *)(&endian_test))[0] = 0x10;
-	//endian_test = 0x76543210;
 
 	while (1)
 	{
 		// BOOT0 button responds on PA8 - why??
 		pa8 = gpio_input_bit_get(GPIOA, GPIO_PIN_8);
 		porta = gpio_input_port_get(GPIOA);
-		//if(pa8 == 1) {
-		//	asm("li a4,0x0;\njalr a4,0");
-		//}
 
-		BACK_COLOR = pa8 ? RED : BLUE;
+		BACK_COLOR = pa8 ? BRED : BLUE;
 
-		// mcycle (read only, User mode)
-		// mcyclel = read_csr(0x301);
 		unsigned long mcyclel = read_csr(0xC00);
 
 		// Flash Memory Controller: Memory density register
 		unsigned long fmc_pid = *(unsigned long *)(0x1FFFF7E0);
 
-		//printHex(0, mcyclel);
-		//printHex(1, *rom_ptr);
-		printHex(5, g_count);
 		//printHex(3, *(unsigned short *)(0x40000024));
 		LCD_ShowString8(90, (0 << 3), (u8 *)"mtvec", YELLOW);
 		printHex(0, read_csr(0x305));
@@ -164,6 +156,7 @@ int main(void)
 		printHex(3, *((u8 *)ECLIC_ADDR_BASE));
 
 		printHex(4, fmc_pid);
+		printHex(5, g_count);
 
 		//LCD_ShowString8(0, (5 << 3), (u8 *)"abcdevwxyzABCDEVWXYZ", YELLOW);
 		LCD_ShowString8(0, (6 << 3), (u8 *)"0123456789 !\"$%^&*()", YELLOW);

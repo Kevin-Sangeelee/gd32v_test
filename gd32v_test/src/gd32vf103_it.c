@@ -32,9 +32,16 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 OF SUCH DAMAGE.
 */
 #include "gd32vf103.h"
-//#include "gd32vf103v_eval.h"
+#include "riscv_encoding.h"
 
 extern unsigned long g_count;
+
+typedef union {
+	unsigned long long last_exti_pa8;
+	unsigned long cyclehl[2];
+} cycle_t;
+
+cycle_t timestamp = { 0 };
 
 /**
   * @brief  This function handles TIMER1 interrupt request.
@@ -43,19 +50,29 @@ extern unsigned long g_count;
   */
 void TIMER1_IRQHandler(void)
 {
-    if(SET == timer_interrupt_flag_get(TIMER1, TIMER_INT_CH0)){
+    if(SET == timer_interrupt_flag_get(TIMER1, TIMER_INT_CH0)) {
         /* clear channel 0 interrupt bit */
         timer_interrupt_flag_clear(TIMER1, TIMER_INT_CH0);
-	g_count++;
-//	while(1);
- //       gd_eval_led_toggle(LED2);
+//	g_count++;
     }
 }
 
 void EXTI5_9_IRQHandler(void)
 {
-	if (SET == exti_interrupt_flag_get(EXTI_8)){
+	if (SET == exti_interrupt_flag_get(EXTI_8)) {
+
+		cycle_t now;
+		now.cyclehl[0] = read_csr(0xc00); // low word
+		now.cyclehl[1] = read_csr(0xc80); // high word
+
 		exti_interrupt_flag_clear(EXTI_8);
+
+		// less than ~0.1s between interrupts is seen as bounce.
+		if(now.last_exti_pa8 - timestamp.last_exti_pa8 < 10800000LL)
+			return;
+
+		timestamp.last_exti_pa8 = now.last_exti_pa8;
+
 		g_count++;
 
 	}
