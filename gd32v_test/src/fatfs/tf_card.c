@@ -115,6 +115,17 @@ void rcvr_spi_multi (
 
 }
 
+/* Send multiple byte */
+static
+void xmit_spi_multi (
+	const BYTE *buff,	/* Pointer to the data */
+	UINT btx			/* Number of bytes to send (even number) */
+)
+{
+	for(UINT i=0; i<btx; i++) {
+		xchg_spi(*(buff+i));
+	}
+}
 
 /*-----------------------------------------------------------------------*/
 /* Wait for card ready                                                   */
@@ -194,6 +205,27 @@ int rcvr_datablock (	/* 1:OK, 0:Error */
 	return 1;						/* Function succeeded */
 }
 
+static
+int xmit_datablock (	/* 1:OK, 0:Failed */
+	const BYTE *buff,	/* Ponter to 512 byte data to be sent */
+	BYTE token			/* Token */
+)
+{
+	BYTE resp;
+
+
+	if (!wait_ready(500)) return 0;		/* Wait for card ready */
+
+	xchg_spi(token);					/* Send token */
+	if (token != 0xFD) {				/* Send data if token is other than StopTran */
+		xmit_spi_multi(buff, 512);		/* Data */
+		xchg_spi(0xFF); xchg_spi(0xFF);	/* Dummy CRC */
+
+		resp = xchg_spi(0xFF);				/* Receive data resp */
+		if ((resp & 0x1F) != 0x05) return 0;	/* Function fails if the data packet was not accepted */
+	}
+	return 1;
+}
 
 /*-----------------------------------------------------------------------*/
 /* Send a command packet to the MMC                                      */
