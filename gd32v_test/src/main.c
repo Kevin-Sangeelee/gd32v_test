@@ -99,7 +99,7 @@ void extract_bootloader()
     FRESULT fr;     /* FatFs return code */
     FIL fil;
     UINT bw = 999;
-                
+
     fr = f_mount(&fs, "", 1);
     printHex(0, fr);
 
@@ -107,20 +107,20 @@ void extract_bootloader()
         fr = f_open(&fil, "bootload.bin", FA_CREATE_ALWAYS | FA_WRITE);
         printHex(1, fr);
 
-	/*
-	 * Write 38 x 128 unsigned long (18K)
-	 */
-    	unsigned long *rom_ptr = (unsigned long *)(0x1fffb000);
-	unsigned long buf[128];
-	for(int j=0; j < 36; j++) {
-		for(int i=0; i < 128; i++) {
-			buf[i] = *rom_ptr;
-			rom_ptr++;
-		}
-		fr = f_write(&fil, buf, 512, &bw);
-        	printHex(2, fr);
-        	printHex(3, bw);
-	}
+    /*
+     * Write 38 x 128 unsigned long (18K)
+     */
+        unsigned long *rom_ptr = (unsigned long *)(0x1fffb000);
+    unsigned long buf[128];
+    for(int j=0; j < 36; j++) {
+        for(int i=0; i < 128; i++) {
+            buf[i] = *rom_ptr;
+            rom_ptr++;
+        }
+        fr = f_write(&fil, buf, 512, &bw);
+            printHex(2, fr);
+            printHex(3, bw);
+    }
 
         f_close(&fil);
     }
